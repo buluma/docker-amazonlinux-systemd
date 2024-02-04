@@ -1,11 +1,26 @@
-name: build-push
+---
+name: Update repo description
 
 on:
+  pull_request:
   push:
+    paths:
+      - 'README.md'
+  workflow_dispatch:
+    inputs:
+      debug:
+        type: boolean
+        required: false
+        default: 'false'
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
+# update docker repo description
   release:
-    name: Release
+    name: Update
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
 
@@ -17,8 +32,8 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            buluma/docker-ubuntu-systemd
-            ghcr.io/buluma/docker-ubuntu-systemd
+            name/app
+            ghcr.io/username/app
           # generate Docker tags based on the following events/attributes
           tags: |
             type=schedule
@@ -38,24 +53,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to GHCR
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
+      - name: Update repo description
+        uses: peter-evans/dockerhub-description@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push image.
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          sbom: true
-          provenance: mode=max
-          file: Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            buluma/amazonlinux:${{ env.tag }}
-            ghcr.io/buluma/amazonlinux:${{ env.tag }}
-          labels: ${{ steps.meta.outputs.labels }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: buluma/amazonlinux
+          short-description: ${{ github.event.repository.description }}
+          enable-url-completion: true
