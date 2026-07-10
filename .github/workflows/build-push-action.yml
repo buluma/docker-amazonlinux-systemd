@@ -18,8 +18,8 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            buluma/docker-ubuntu-systemd
-            ghcr.io/buluma/docker-ubuntu-systemd
+            buluma/docker-amazonlinux-systemd
+            ghcr.io/buluma/docker-amazonlinux-systemd
           # generate Docker tags based on the following events/attributes
           tags: |
             type=schedule
@@ -56,7 +56,5 @@ jobs:
           file: Dockerfile
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            buluma/amazonlinux:${{ env.tag }}
-            ghcr.io/buluma/amazonlinux:${{ env.tag }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
